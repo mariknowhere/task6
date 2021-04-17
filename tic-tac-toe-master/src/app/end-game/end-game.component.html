@@ -1,0 +1,23 @@
+<ng-container *ngIf="!data.isDraw">
+  <ng-container *ngIf="data.isWinner">
+    Congratulations, you won!
+  </ng-container>
+
+  <ng-container *ngIf="!data.isWinner">
+    Unlucky, you lost
+  </ng-container>
+</ng-container>
+
+<ng-container *ngIf="data.isDraw">
+  Draw
+</ng-container>
+
+<br>
+
+<div class="ok-button-container">
+  <button class="ok-button"
+          mat-raised-button
+          (click)="dialogRef.close()">
+    OK
+  </button>
+</div>

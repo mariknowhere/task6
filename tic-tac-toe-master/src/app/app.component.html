@@ -1,0 +1,170 @@
+<mat-toolbar class="toolbar">
+  <div>TIC-TAC-TOE</div>
+  <div *ngIf="socket.connected">
+    Signed as {{name}}
+  </div>
+</mat-toolbar>
+
+<ng-container *ngIf="!socket.connected">
+  <div class="flex-center">
+    <h2>
+      Select nickname
+    </h2>
+  </div>
+  <div class="nickname-field-container">
+    <mat-form-field class="nickname-field"
+                    appearance="standard">
+      <mat-label>Choose nickname</mat-label>
+      <input [formControl]="nameControl"
+             autocomplete="off"
+             matInput
+             placeholder="Choose nickname">
+      <mat-error *ngIf="nameControl.errors?.alreadyUsed">
+        Name already used
+      </mat-error>
+    </mat-form-field>
+
+    <button class="host-button"
+            color="accent"
+            mat-stroked-button
+            (click)="connect()">
+      SIGN IN
+    </button>
+  </div>
+</ng-container>
+
+<mat-tab-group *ngIf="socket.connected && !game"
+               mat-stretch-tabs>
+  <mat-tab label="Join"
+           [disabled]="isHosted">
+    <div class="flex-center">
+      <h2>
+        Select game to join
+      </h2>
+
+      <div *ngIf="!filteredHosts.length">
+        No available games
+      </div>
+
+      <mat-form-field class="host-chips">
+        <mat-label>
+          add tags to search games
+        </mat-label>
+        <mat-chip-list #clientListChips
+                       aria-label="Add tags to search">
+          <mat-chip *ngFor="let tag of clientTags; trackBy: trackByContent"
+                    [selectable]="false"
+                    [removable]="true"
+                    (removed)="removeClientTag(tag)">
+            {{tag}}
+            <mat-icon matChipRemove>cancel</mat-icon>
+          </mat-chip>
+          <input placeholder="Input tag and tap enter"
+                 [matChipInputFor]="clientListChips"
+                 [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                 [matAutocomplete]="auto"
+                 [matChipInputAddOnBlur]="true"
+                 (matChipInputTokenEnd)="addClientTag($event)">
+        </mat-chip-list>
+        <mat-autocomplete #auto="matAutocomplete"
+                          (optionSelected)="addClientTagByAutocomplete($event.option.value)">
+          <mat-option *ngFor="let tag of allTags"
+                      [value]="tag">
+            {{tag}}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+
+    <mat-list>
+      <ng-container *ngFor="let host of filteredHosts; trackBy: trackByHostname">
+        <mat-list-item>
+          <div class="join-option">
+            <div class="flex-center">
+              {{host.hostName}}
+            </div>
+            <button (click)="joinGame(host.hostName)"
+                    mat-stroked-button>
+              JOIN
+            </button>
+          </div>
+        </mat-list-item>
+        <mat-divider></mat-divider>
+      </ng-container>
+    </mat-list>
+  </mat-tab>
+
+  <mat-tab label="Host">
+    <div class="flex-center">
+      <h2>
+        Create your own game
+      </h2>
+
+      <mat-form-field class="host-chips">
+        <mat-label>
+          add tags and users could find your game
+        </mat-label>
+        <mat-chip-list [disabled]="isHosted"
+                       #hostCreateChips
+                       aria-label="Add tags to search">
+          <mat-chip *ngFor="let tag of hostTags; trackBy: trackByContent"
+                    [selectable]="false"
+                    [removable]="true"
+                    (removed)="removeHostTag(tag)">
+            {{tag}}
+            <mat-icon matChipRemove>cancel</mat-icon>
+          </mat-chip>
+          <input placeholder="Input tag and tap enter"
+                 [matChipInputFor]="hostCreateChips"
+                 [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                 [matChipInputAddOnBlur]="true"
+                 (matChipInputTokenEnd)="addHostTag($event)">
+        </mat-chip-list>
+      </mat-form-field>
+
+      <button class="host-button"
+              mat-stroked-button
+              (click)="isHosted ? stopHostGame() : hostGame()">
+        {{isHosted ? 'STOP HOST' : 'START HOST'}}
+      </button>
+
+      <div *ngIf="isHosted"
+           class="flex-center">
+        <div class="awaiting-label">
+          Awaiting other player to connect
+        </div>
+        <div class="wave">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+    </div>
+  </mat-tab>
+</mat-tab-group>
+
+<ng-container *ngIf="game">
+  <mat-toolbar>
+    <ng-container *ngIf="blocked">
+      Awaiting {{otherName}} move
+    </ng-container>
+
+    <ng-container *ngIf="!blocked">
+      Your turn
+    </ng-container>
+  </mat-toolbar>
+
+  <div class="tik-toe flex-center">
+    <div class="tik-toe-row"
+         [class.blocked]="blocked"
+         *ngFor="let row of game.moves; index as rowIndex">
+      <div class="tik-toe-cell"
+           (click)="move(rowIndex, cellIndex)"
+           *ngFor="let cell of row; index as cellIndex">
+        <div class="tik-toe-cell-value">
+          {{cell}}
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>
